@@ -1,7 +1,6 @@
 import { validationResult } from 'express-validator';
 import HttpError from '../models/http-error.js';
 import User from '../models/User.js';
-import mongoose from 'mongoose';
 
 const getUsers = async (req, res, next) => {
     let users;
@@ -20,6 +19,7 @@ const signup = async (req, res, next) => {
         console.log(errors);
         return next(new HttpError('Invalid inputs, please check your data.', 422));
     }
+
     const { name, email, password } = req.body;
 
     let existingUser;
@@ -53,7 +53,6 @@ const signup = async (req, res, next) => {
 const login = async (req, res, next) => {
     const { email, password } = req.body;
 
-
     let existingUser;
     try {
         existingUser = await User.findOne({ email: email });
@@ -66,7 +65,7 @@ const login = async (req, res, next) => {
         return next(new HttpError('Invalid credentials, could not log you in.', 401));
     }
 
-    res.json({ message: 'Logged in!', user: existingUser });
+    res.json({ message: 'Logged in!', user: existingUser.toObject({ getters: true }) });
 }
 
 export { getUsers, signup, login };

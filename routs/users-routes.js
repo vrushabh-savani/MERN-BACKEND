@@ -1,5 +1,5 @@
 import express from 'express';
-import {check} from 'express-validator';
+import { check } from 'express-validator';
 
 import { getUsers, signup, login } from '../controllers/users-controller.js';
 const router = express.Router();
@@ -13,7 +13,7 @@ router.post(
             .not()
             .isEmpty(),
         check('email')
-            .normalizeEmail() // Test@test.com => test@test.com
+            .normalizeEmail()
             .isEmail(),
         check('password').isLength({ min: 6 })
     ],
