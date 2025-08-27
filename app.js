@@ -1,3 +1,6 @@
+import fs from 'fs'
+import path from 'path';
+
 import express from 'express';
 import bodyParser from 'body-parser';
 import userRouters from './routs/users-routes.js'
@@ -7,6 +10,8 @@ import { mongodbURL } from './auth.js';
 
 const app = express();
 app.use(bodyParser.json());
+
+app.use('/uploads/images', express.static(path.join('uploads', 'images')));
 
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -19,6 +24,9 @@ app.use('/api/users', userRouters);
 app.use('/api/places', placesRoutes);
 
 app.use((error, req, res, next) => {
+    if(req.file){
+        fs.unlink(req.file.path, err => console.log(err));
+    }
     if (res.headersSent) {
         return next(error);
     }

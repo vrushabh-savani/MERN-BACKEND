@@ -1,6 +1,7 @@
 import express from 'express';
 import { check } from 'express-validator';
 import { getPlaceById, getPlacesByUserId, createPlace, updatePlace, deletePlace } from '../controllers/places-controller.js';
+import fileUpload from '../middleware/file-upload.js';
 const router = express.Router();
 
 router.get('/:pid', getPlaceById);
@@ -9,6 +10,7 @@ router.get('/user/:uid', getPlacesByUserId);
 
 router.post(
   '/',
+  fileUpload.single('image'),
   [
     check('title')
       .not()
