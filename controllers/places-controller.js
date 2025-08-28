@@ -42,7 +42,7 @@ const createPlace = async (req, res, next) => {
         console.log(errors);
         return next(new HttpError('Invalid inputs, please check your data.', 422));
     }
-    const { title, description, address, creator } = req.body;
+    const { title, description, address } = req.body;
     let coordinates;
     try {
         coordinates = await getCoordsForAddress(address);
@@ -53,14 +53,14 @@ const createPlace = async (req, res, next) => {
         title,
         description,
         location: coordinates,
-        image:  req.file.path,
+        image: req.file.path,
         address,
-        creator
+        creator: req.userData.userId
     });
 
     let user;
     try {
-        user = await User.findById(creator);
+        user = await User.findById(req.userData.userId);
     } catch (err) {
         return next(new HttpError('Creating place failed, please try again.', 500));
     }
@@ -89,9 +89,12 @@ const updatePlace = async (req, res, next) => {
         return next(new HttpError('Invalid inputs, please check your data.', 422));
     }
 
+    const { title, description } = req.body;
+    const placeId = req.params.pid;
+
     let place;
     try {
-        place = await Place.findById(req.params.pid);
+        place = await Place.findById(placeId);
     } catch (err) {
         return next(new HttpError('Fetching place failed, please try again later.', 500));
     }
@@ -100,27 +103,18 @@ const updatePlace = async (req, res, next) => {
         return next(new HttpError('Could not find a place for the provided id.', 404));
     }
 
-    const { title, description, address } = req.body;
-    let coordinates;
-    try {
-        coordinates = await getCoordsForAddress(address);
-    } catch (err) {
-        return next(err);
+    if (place.creator.toString() !== req.userData.userId) {
+        return next(new HttpError('You are not allowed to edit this place.', 403));
     }
-    const updatedPlace = {
-        id: place.id,
-        title,
-        description,
-        location: coordinates,
-        address,
-        creator: place.creator
-    };
+
+    place.title = title;
+    place.description = description;
     try {
-        await Place.findByIdAndUpdate(req.params.pid, updatedPlace);
+        await Place.findByIdAndUpdate(req.params.pid, place);
     } catch (err) {
         return next(new HttpError('Updating place failed, please try again later.', 500));
     }
-    res.status(200).json({ place: updatedPlace });
+    res.status(200).json({ place });
 }
 
 const deletePlace = async (req, res, next) => {
@@ -134,6 +128,10 @@ const deletePlace = async (req, res, next) => {
 
     if (!place) {
         return next(new HttpError('Could not find a place for the provided id.', 404));
+    }
+
+    if (place.creator.id !== req.userData.userId) {
+        return next(new HttpError('You are not allowed to delete this place.', 403));
     }
 
     const imagePath = place.image;
