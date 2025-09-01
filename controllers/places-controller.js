@@ -3,7 +3,7 @@ import HttpError from "../models/http-error.js";
 import { validationResult } from "express-validator";
 import getCoordsForAddress from "../util/location.js";
 import Place from "../models/place.js";
-import User from "../models/User.js";
+import User from "../models/user.js";
 import mongoose from "mongoose";
 
 
@@ -109,12 +109,13 @@ const updatePlace = async (req, res, next) => {
 
     place.title = title;
     place.description = description;
+
     try {
         await Place.findByIdAndUpdate(req.params.pid, place);
     } catch (err) {
         return next(new HttpError('Updating place failed, please try again later.', 500));
     }
-    res.status(200).json({ place });
+    res.status(200).json({ place: place.toObject({ getters: true }) });
 }
 
 const deletePlace = async (req, res, next) => {

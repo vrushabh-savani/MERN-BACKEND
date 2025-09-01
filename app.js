@@ -1,3 +1,5 @@
+import dotenv from 'dotenv'
+
 import fs from 'fs'
 import path from 'path';
 
@@ -6,7 +8,9 @@ import bodyParser from 'body-parser';
 import userRouters from './routs/users-routes.js'
 import placesRoutes from './routs/places-routes.js';
 import mongoose from 'mongoose';
-import { mongodbURL } from './auth.js';
+
+dotenv.config({ path: '.env' })
+
 
 const app = express();
 app.use(bodyParser.json());
@@ -24,7 +28,7 @@ app.use('/api/users', userRouters);
 app.use('/api/places', placesRoutes);
 
 app.use((error, req, res, next) => {
-    if(req.file){
+    if (req.file) {
         fs.unlink(req.file.path, err => console.log(err));
     }
     if (res.headersSent) {
@@ -35,12 +39,12 @@ app.use((error, req, res, next) => {
     res.json({ message: error.message || 'An unknown error occurred!' });
 });
 
+const PORT = process.env.PORT || 5000;
 mongoose
-    .connect(mongodbURL)
+    .connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.r6uti.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority&appName=Cluster0`)
     .then(() => {
-        app.listen(5000);
-        console.log('Server is running on port 5000');
-
+        app.listen(PORT);
+        console.log(`Server is running on port ${PORT}`);
     })
     .catch(err => {
         console.log(err);
